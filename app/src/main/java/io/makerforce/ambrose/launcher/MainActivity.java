@@ -7,8 +7,10 @@ import android.content.pm.ResolveInfo;
 import android.content.res.Resources;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.RecyclerView;
@@ -37,6 +39,8 @@ public class MainActivity extends AppCompatActivity {
     private RecyclerView.LayoutManager mLayoutManager;
     private ImageButton backButton;
 
+    private List<AppItem> appItems = new ArrayList<>();
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -48,13 +52,26 @@ public class MainActivity extends AppCompatActivity {
         mLayoutManager = new StaggeredGridLayoutManager(3, 1);
         mRecyclerView.setLayoutManager(mLayoutManager);
 
-        int granted = ContextCompat.checkSelfPermission(this,
-                Manifest.permission.READ_EXTERNAL_STORAGE);
-        if (granted != PackageManager.PERMISSION_GRANTED) {
-            Log.d("AllApps", "Requires permission");
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            int granted = checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE);
+            if (granted != PackageManager.PERMISSION_GRANTED) {
+                Log.d("AllApps", "Requires permission");
+                requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, 1);
+            } else {
+                Log.d("AllApps", "Permission already granted");
+            }
+        } else {
+            int granted = ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE);
+            if (granted != PackageManager.PERMISSION_GRANTED) {
+                Log.d("AllApps", "Requires permission");
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, 1);
+            } else {
+                Log.d("AllApps", "Permission already granted");
+            }
         }
 
-        mAdapter = new AppListAdapter(getAppListData(), getApplicationContext());
+        updateAppListData(appItems);
+        mAdapter = new AppListAdapter(appItems, getApplicationContext());
         mRecyclerView.setAdapter(mAdapter);
 
         backButton = (ImageButton) findViewById(R.id.backButton);
@@ -69,14 +86,14 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private List<AppItem> getAppListData(){
+    private void updateAppListData(List<AppItem> appItems){
         List<AppItem> listViewItems = readList();
-
         if (listViewItems == null) {
             listViewItems = new ArrayList<>();
         }
 
-        return listViewItems;
+        appItems.clear();
+        appItems.addAll(listViewItems);
     }
 
     private List<AppItem> readList() {
@@ -93,7 +110,7 @@ public class MainActivity extends AppCompatActivity {
 
             json = new String(buffer, "UTF-8");
         } catch (IOException ex) {
-            ex.printStackTrace();
+            Log.e("AllApps", ex.toString());
             return null;
         }
 
@@ -159,7 +176,7 @@ public class MainActivity extends AppCompatActivity {
                 list.add(a);
             }
         } catch (JSONException ex) {
-            ex.printStackTrace();
+            Log.e("AllApps", ex.toString());
             return null;
         }
 
@@ -178,6 +195,20 @@ public class MainActivity extends AppCompatActivity {
             return resources.getDrawableForDensity(iconRes, DisplayMetrics.DENSITY_XHIGH);
         } catch (Resources.NotFoundException e) {
             return null;
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
+        switch (requestCode) {
+            case 1:
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    updateAppListData(appItems);
+                    mAdapter.notifyDataSetChanged();
+                } else {
+                    Log.d("AllApps", "Permission denied");
+                }
+                return;
         }
     }
 

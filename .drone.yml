@@ -5,4 +5,3 @@ pipeline:
     image: plugins/github-release
     secrets: [ github_token ]
     files: app/build/outputs/apk/app-debug.apk 
-  publish: # TODO: Push to Google Play beta

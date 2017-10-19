@@ -4,4 +4,6 @@ pipeline:
   release:
     image: plugins/github-release
     secrets: [ github_token ]
-    files: app/build/outputs/apk/app-debug.apk 
+    files: app/build/outputs/apk/app-debug.apk
+    when:
+      event: tag

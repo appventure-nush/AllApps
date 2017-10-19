@@ -72,8 +72,8 @@ public class AppListAdapter extends RecyclerView.Adapter<AppListAdapter.ViewHold
     }
 
     @Override
-    public void onBindViewHolder(final AppListAdapter.ViewHolder holder, final int position) {
-        AppItem a = appList.get(position);
+    public void onBindViewHolder(final AppListAdapter.ViewHolder holder, int position) {
+        AppItem a = appList.get(holder.getAdapterPosition());
 
         holder.title.setText(a.getTitle());
         holder.description.setText(a.getDescription());
@@ -126,7 +126,7 @@ public class AppListAdapter extends RecyclerView.Adapter<AppListAdapter.ViewHold
         holder.cardLayout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                startApp(position);
+                startApp(holder.getAdapterPosition());
             }
         });
     }

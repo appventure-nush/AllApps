@@ -1,0 +1,8 @@
+pipeline:
+  build:
+    image: 127.0.0.1:5001/builder-android
+  release:
+    image: plugins/github-release
+    secrets: [ github_token ]
+    files: app/build/outputs/apk/app-debug.apk 
+  publish: # TODO: Push to Google Play beta

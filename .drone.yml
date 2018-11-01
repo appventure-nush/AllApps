@@ -1,10 +1,13 @@
 pipeline:
   build:
     image: productionwentdown/android-builder
-    pull: true
+  release-build:
+    image: productionwentdown/android-builder
     secrets: [ store_file, store_password, key_alias ]
     commands:
     - release
+    when:
+      event: tag
   release:
     image: plugins/github-release
     secrets: [ github_token ]

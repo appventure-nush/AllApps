@@ -1,6 +1,8 @@
 pipeline:
   build:
     image: productionwentdown/android-builder
+    when:
+      event: push
   release-build:
     image: productionwentdown/android-builder
     secrets: [ store_file, store_password, key_alias ]

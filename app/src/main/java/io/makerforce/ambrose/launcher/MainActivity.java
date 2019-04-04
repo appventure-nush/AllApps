@@ -20,6 +20,8 @@ import android.util.Log;
 import android.view.View;
 import android.widget.ImageButton;
 
+import android.os.Handler;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -38,6 +40,10 @@ public class MainActivity extends AppCompatActivity {
     private RecyclerView.Adapter mAdapter;
     private RecyclerView.LayoutManager mLayoutManager;
     private ImageButton backButton;
+    
+    private Handler handler;
+    private Runnable runnable;
+    private int timeOutSec = 180;
 
     private List<AppItem> appItems = new ArrayList<>();
 
@@ -45,6 +51,8 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        
+        setAppIdleTimeout();
 
         mRecyclerView = (RecyclerView) findViewById(R.id.recycler_view);
         mRecyclerView.setHasFixedSize(true);
@@ -210,6 +218,59 @@ public class MainActivity extends AppCompatActivity {
                 }
                 return;
         }
+    }
+    
+    private void setAppIdleTimeout() {
+
+        handler = new Handler();
+        runnable = new Runnable() {
+
+            @Override
+            public void run() {
+                // TODO Auto-generated method stub
+                runOnUiThread(new Runnable() {
+
+                    @Override
+                    public void run() {
+                        // Navigate to main activity
+                        Intent startMain = new Intent(Intent.ACTION_MAIN);
+                        startMain.addCategory(Intent.CATEGORY_HOME);
+                        startMain.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                        startActivity(startMain);
+                        finish();
+                        overridePendingTransition(0,0);
+                    }
+                });
+            }
+        };
+        handler.postDelayed(runnable, timeOutSec * 1000);
+    }
+
+    //reset timer on user interaction and in onResume
+    public void resetAppIdleTimeout() {
+        handler.removeCallbacks(runnable);
+        handler.postDelayed(runnable, timeOutSec * 1000);
+    }
+
+    @Override
+    protected void onResume() {
+        // TODO Auto-generated method stub
+        super.onResume();
+        resetAppIdleTimeout();
+    }
+
+    @Override
+    public void onUserInteraction() {
+        // TODO Auto-generated method stub
+        resetAppIdleTimeout();
+        super.onUserInteraction();
+    }
+
+    @Override
+    public void onDestroy() {
+        // TODO Auto-generated method stub
+        handler.removeCallbacks(runnable);
+        super.onDestroy();
     }
 
 }
